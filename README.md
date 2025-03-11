@@ -15,7 +15,7 @@ pip install -r requirements.txt
 
 ### Llama-3-ELYZA-JP-8B のダウンロード
 モデルのダウンロードは以下のURLから行ってください。
-- [ELYZA Model Download](https://huggingface.co/elyza/llama-3-elyza-jp-8b)
+- [ELYZA Model Download](https://huggingface.co/elyza/Llama-3-ELYZA-JP-8B-GGUF/tree/main)
 
 ダウンロード後、モデルを `models/Llama-3-ELYZA-JP-8B-q4_k_m.gguf` に配置してください。
 
