@@ -10,7 +10,7 @@
 ## インストール
 ### 仮想環境の作成とpipの更新　Windows版の場合
 ```sh
-py -m -m venv [newenvname]
+py -m venv [newenvname]
 ```
  ```sh
 .\[newenvname]\Scripts\activate
