@@ -8,6 +8,15 @@
 - **マルチランゲージ対応**: 日本語を含む多言語対応。
 
 ## インストール
+### 仮想環境の作成とpipの更新　Windows版の場合
+```sh
+ python3 -m venv [newenvname]
+ or
+ py -m -m venv [newenvname]
+
+ .\[newenvname]\Scripts\activate
+python3 -m pip install --upgrade pip
+```
 ### 依存ライブラリのインストール
 ```sh
 pip install -r requirements.txt
