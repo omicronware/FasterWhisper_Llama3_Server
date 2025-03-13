@@ -10,11 +10,12 @@
 ## インストール
 ### 仮想環境の作成とpipの更新　Windows版の場合
 ```sh
- python3 -m venv [newenvname]
- or
- py -m -m venv [newenvname]
-
- .\[newenvname]\Scripts\activate
+py -m -m venv [newenvname]
+```
+ ```sh
+.\[newenvname]\Scripts\activate
+ ```
+ ```sh
 python3 -m pip install --upgrade pip
 ```
 ### 依存ライブラリのインストール
