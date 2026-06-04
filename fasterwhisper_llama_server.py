@@ -7,6 +7,7 @@
 # Copyright(C) Omicronware.
 import os
 import sys
+import ssl
 import tempfile
 import traceback
 import ctypes
@@ -142,22 +143,35 @@ if __name__ == '__main__':
 
     # HTTP用 WSGIServer (0.0.0.0:9000)
     http_server = WSGIServer(('0.0.0.0', 9000), app)
+    https_server = None
 
     # HTTPS用 WSGIServer (0.0.0.0:9443)
     # certfile/keyfile を指定する
-    try:
-      https_server = WSGIServer(
-          ('0.0.0.0', 9443), 
-          app,
-          keyfile=SSL_KEY_FILE,
-          certfile=SSL_CERT_FILE
-      )
+    # server.key / server.crt がそろっていない場合は、
+    # HTTPSサーバーを作成・起動しない。HTTPサーバーは従来どおり起動する。
+    ssl_required_files = [SSL_KEY_FILE, SSL_CERT_FILE]
+    missing_ssl_files = [path for path in ssl_required_files if not os.path.isfile(path)]
 
+    try:
       print("Starting HTTP server on port 9000")
       http_server.start()
 
-      print("Starting HTTPS server on port 9443")
-      https_server.start()
+      if missing_ssl_files:
+          print(
+              "HTTPS server was not started because required SSL file(s) are missing: "
+              + ", ".join(missing_ssl_files),
+              file=sys.stderr
+          )
+      else:
+          https_server = WSGIServer(
+              ('0.0.0.0', 9443),
+              app,
+              keyfile=SSL_KEY_FILE,
+              certfile=SSL_CERT_FILE
+          )
+
+          print("Starting HTTPS server on port 9443")
+          https_server.start()
 
       print("Servers are running. Press Ctrl+C to stop.")
       
@@ -174,6 +188,7 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         print("\nShutdown requested. Stopping servers...")
         http_server.stop()
-        https_server.stop()
+        if https_server is not None:
+            https_server.stop()
         print("Servers stopped successfully.")
         sys.exit(0)

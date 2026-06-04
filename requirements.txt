@@ -1,4 +1,17 @@
-faster_whisper==1.1.1
-Flask==3.1.0
-gevent==24.11.1
-llama_cpp_python==0.3.7
+# Direct third-party dependencies for:
+# - fasterwhisper_llama_server.py
+# - llama.py
+#
+# Python standard-library modules such as os, sys, ssl, tempfile,
+# traceback, ctypes, re, and threading are not listed here.
+#
+# Note:
+# For GPU acceleration with llama-cpp-python on Windows/CUDA,
+# install/build llama-cpp-python with the CUDA build options required
+# by your environment. A plain requirements.txt cannot express those
+# PowerShell environment variables by itself.
+
+Flask==3.1.3
+faster-whisper==1.2.1
+gevent==26.5.0
+llama_cpp_python==0.3.25

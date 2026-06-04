@@ -4,6 +4,7 @@
 # please read the Llama3-related documentation on META.
 # Copyright(C) Omicronware.
 import re
+from threading import RLock
 from llama_cpp import Llama
 
 
@@ -20,25 +21,30 @@ llm = Llama(
     verbose=False
 )
 
+# llama_cpp.Llama is a process-global mutable object.
+# Serialize generation to avoid concurrent access from multiple clients.
+LLAMA_QUEUE = RLock()
+
 def llama(from_lang, to_lang, transcribed_text):
     
     from_language = languages_dict(from_lang.lower())['ja']
     to_language   = languages_dict(to_lang.lower())['ja']
     
-    response = llm.create_chat_completion(
-        messages=[
-            {
-                "role": "system",
-                "content": f"あなたは優秀な翻訳者です。{from_language}を{to_language}に翻訳してください。ただし、翻訳結果のみを出力してください。",
-            },
-            {
-                "role": "user",
-                "content": f"{transcribed_text}",
-            },
-        ],
-        max_tokens=512,
-    )
-    
+    with LLAMA_QUEUE:
+        response = llm.create_chat_completion(
+            messages=[
+                {
+                    "role": "system",
+                    "content": f"あなたは優秀な翻訳者です。{from_language}を{to_language}に翻訳してください。ただし、翻訳結果のみを出力してください。",
+                },
+                {
+                    "role": "user",
+                    "content": f"{transcribed_text}",
+                },
+            ],
+            max_tokens=512,
+        )
+
     result = response["choices"][0]["message"]["content"].strip()
     
     # "Here is the translation:" というフレーズを削除（改行・スペースを含む可能性を考慮）
