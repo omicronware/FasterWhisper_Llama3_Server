@@ -24,6 +24,7 @@ import llama
 # gevent を利用した WSGI サーバー
 # pip install gevent
 from gevent.pywsgi import WSGIServer
+from gevent.lock import Semaphore
 import gevent
 
 
@@ -50,6 +51,13 @@ try:
 except Exception as e:
     print("Error loading model:", e, file=sys.stderr)
     sys.exit(1)
+
+
+# The FasterWhisper model and batched pipeline are process-global shared objects.
+# Serialize ASR inference so concurrent clients wait in order instead of touching
+# the shared ASR model at the same time. Llama translation itself is protected
+# separately by LLAMA_QUEUE inside llama.py.
+ASR_QUEUE = Semaphore(1)
 
 
 @app.errorhandler(Exception)
@@ -98,14 +106,22 @@ def transcribe():
 
     try:
         # 文字起こし
-        segments, info = batched_model.transcribe(tmp_filename, language=from_language)
-        full_text = "".join(segment.text for segment in segments)
-        segments_list = [
-            {"start": segment.start, "end": segment.end, "text": segment.text}
-            for segment in segments
-        ]
+        # Only the local FasterWhisper ASR stage uses the shared model pipeline.
+        # Requests wait here in order; no 429/busy response is returned.
+        with ASR_QUEUE:
+            segments, info = batched_model.transcribe(tmp_filename, language=from_language)
 
-        detected_language = getattr(info, "language", from_language)
+            # faster-whisper の segments は generator のため、ここで一度 list 化する。
+            # これにより full_text と segments_list の両方で同じ結果を安全に使える。
+            segments = list(segments)
+
+            full_text = "".join(segment.text for segment in segments)
+            segments_list = [
+                {"start": segment.start, "end": segment.end, "text": segment.text}
+                for segment in segments
+            ]
+
+            detected_language = getattr(info, "language", from_language)
 
         # 翻訳が必要なら実行
         translated_text = None
